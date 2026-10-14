@@ -1,19 +1,8 @@
 # benders_singletree.jl
 # -----------------------------------------------------------------------------
 # SINGLE-TREE branch-and-Benders-cut for the SCP, warm-started by the
-# attractiveness-guided (no-good) incumbent, plus a calibration harness for the
-# warm-start budget.
-#
-# PERFORMANCE-CRITICAL: the transportation subproblem is built ONCE per instance
-# and only its right-hand sides (capacities = w_jk * yhat_j) are updated on each
-# lazy-callback evaluation, then re-solved with warm-started dual simplex. This
-# avoids rebuilding a large LP (up to m*n variables) at every integer node.
-#
-# NOTE: cannot be run here (no Julia/CPLEX). Run on your machine.
-#   Validate:   main(crosscheck=true, instances=1:8)
-#   Calibrate:  calibrate()                     # seeded random training set + sweep
-#   Report:     main(instances=OPEN)            # with the chosen warm_budget
-# -----------------------------------------------------------------------------
+# attractiveness-guided (no-good) incumbent.
+
 
 using JuMP
 using CPLEX
@@ -155,7 +144,7 @@ function benders_singletree(inst::SCPInstance, tstart::Float64, f::Float64; tlim
 
     ncuts = Ref(0)
     best_ub = Ref(f * sum(Y0) + dist0)      # manual, always-valid incumbent (warm start)
-    best_t  = Ref(time() - tstart)          # time-to-best, comparable with Algorithm 2
+    best_t  = Ref(time() - tstart)          
     function lazy_cb(cb_data)
         callback_node_status(cb_data, mp) == MOI.CALLBACK_NODE_STATUS_INTEGER || return
         yv = callback_value.(cb_data, Y); ev = callback_value(cb_data, η)
@@ -178,7 +167,6 @@ function benders_singletree(inst::SCPInstance, tstart::Float64, f::Float64; tlim
     optimize!(mp)
 
     proven = termination_status(mp) == MOI.OPTIMAL
-    # report the manually tracked incumbent (valid); equals the optimum when proven
     obj = best_ub[]
     return obj, proven, ncuts[], best_t[]
 end
@@ -215,15 +203,13 @@ function calibrate(; pool = 45:120, ntrain = 20, seed = 1234,
     println("  of which hard (open under no-good): ", hard, "/", ntrain)
     println("\nwarm_budget   proven   total_obj")
     for wb in budgets
-        _, nproven, totobj = run_budget(train, wb)   # run_budget prints per-instance progress
+        _, nproven, totobj = run_budget(train, wb)   
         @printf("SUMMARY  warm_budget=%.0f  proven=%d/%d  total_obj=%d\n\n",
                 wb, nproven, ntrain, round(Int, totobj))
         flush(stdout)
     end
 end
 
-# Runs one warm_budget over a fixed instance list (serial within the call);
-# used as the unit of work for process-parallel calibration.
 function run_budget(train::Vector{Int}, wb::Float64)
     nproven = 0; totobj = 0.0
     for i in train
@@ -269,4 +255,3 @@ end
 #   main(crosscheck = true, instances = 1:8)   # validate
 #   calibrate()                                # SERIAL calibration (fair timing)
 #   main(instances = OPEN)                      # report with the chosen warm_budget
-# For PROCESS-PARALLEL calibration (faster, exploratory), run: run_calibration.jl
