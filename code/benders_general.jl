@@ -1,15 +1,4 @@
 # benders_general.jl
-# -----------------------------------------------------------------------------
-# GENERALITY EXPERIMENT (Reviewer #2, point 1).
-#
-# The referee objects that the proposed algorithms rely on the parameter setting
-# f_j = f with f large enough to induce a lexicographic objective, and that they
-# therefore do not address the general SCP of Section 2. This holds for the
-# combinatorial scheme, which confines the search to the minimum-cardinality
-# stratum. It does NOT hold for the branch-and-Benders-cut method: its master is
-#       min  sum_j f_j Y_j + eta   s.t. (II), optimality cuts,
-# which never restricts cardinality and is indifferent to the cost structure.
-# The Benders cuts come from the transportation dual and do not involve f at all.
 #
 # This script tests that claim on instances with HETEROGENEOUS, NON-DOMINATING
 # opening costs, where the optimum genuinely trades schools against distance.
@@ -288,10 +277,6 @@ function main_general(; seed = 1234, nsample = 20, pool = 1:120, tlim = 105.0,
     println("Benders optimum = MILP optimum      : ", nmatch, "/", nproven,
             "   (of the instances Benders certified)")
     println()
-    # The only rigorous statement about the optimal cardinality is the one taken
-    # over CERTIFIED optima: elsewhere n_opt is merely the cardinality of the
-    # incumbent, not of a proven optimum. Reporting it over all instances would
-    # overstate the finding.
     println("certified optima opening > kappa    : ", nabove_cert, "/", nproven,
             "   <- the minimum-cardinality restriction would exclude the optimum here")
     println()
@@ -308,19 +293,6 @@ function main_general(; seed = 1234, nsample = 20, pool = 1:120, tlim = 105.0,
     flush(stdout)
 end
 
-# --- data deposit -------------------------------------------------------------
-# Writes the opening-cost vectors actually used in Section 6.4 to a text file,
-# for deposit alongside the paper (EJOR computational-experiments policy, data
-# sharing).  Publishing the seed alone would not be enough: the drawn values
-# depend on Julia's MersenneTwister stream and on Delta, which is itself obtained
-# by solving the subproblem, so the realised vectors are the reproducible record.
-#
-# This function MUST consume the random stream in exactly the same order as
-# main_general -- same seed, same shuffle, same per-instance call to make_costs --
-# otherwise the exported costs would not be the ones behind the reported results.
-# That is why it lives in this file next to main_general rather than in a script
-# of its own.
-#
 # Usage:  include("benders_general.jl")
 #         export_costs()                       # writes all three cost levels
 function export_costs(; seed = 1234, nsample = 20, pool = 1:120,
