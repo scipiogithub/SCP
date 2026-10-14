@@ -45,7 +45,7 @@ All reported runs used a **single thread** and a **zero relative MIP gap**.
 The 121 benchmark instances are **not redistributed here**: they were introduced
 by Sá & Prata (2026) and are available from
 
-> `[INSERT REPOSITORY URL OR DOI FOR THE BENCHMARK INSTANCES]`
+> https://github.com/NayzaMamede/students-clustering-problem
 
 Place them so that instance *i* is at `SCP/SCP_inst<i>.txt`, relative to the
 working directory. Instance 121 is the real municipal network of Fortaleza.
