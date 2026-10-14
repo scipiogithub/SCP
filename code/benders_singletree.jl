@@ -1,6 +1,6 @@
 # benders_singletree.jl
 # -----------------------------------------------------------------------------
-# STEP 2: SINGLE-TREE branch-and-Benders-cut for the SCP, warm-started by the
+# SINGLE-TREE branch-and-Benders-cut for the SCP, warm-started by the
 # attractiveness-guided (no-good) incumbent, plus a calibration harness for the
 # warm-start budget.
 #
