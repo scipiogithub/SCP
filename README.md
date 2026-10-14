@@ -3,7 +3,7 @@
 Code and data for:
 
 > T. Cura. *Exact decomposition algorithms for the student clustering problem.*
-> European Journal of Operational Research (accepted, pending final revision).
+> European Journal of Operational Research.
 
 The repository accompanies the paper under the EJOR policy on computational
 experiments. It contains the two exact decomposition algorithms, the
