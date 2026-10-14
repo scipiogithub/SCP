@@ -1,0 +1,23 @@
+{
+  "title": "Exact decomposition algorithms for the student clustering problem: code and data",
+  "upload_type": "software",
+  "access_right": "open",
+  "creators": [
+    {
+      "name": "Cura, Tunchan",
+      "affiliation": "Istanbul University",
+      "orcid": "0000-0001-5714-8629"
+    }
+  ],
+  "description": "<p>Code and data accompanying the paper <em>Exact decomposition algorithms for the student clustering problem</em> (European Journal of Operational Research, forthcoming).</p><p>Contains the two exact decomposition algorithms for the Student Clustering Problem &mdash; a single-tree branch-and-check scheme using combinatorial (no-good) cuts and a branch-and-Benders-cut method &mdash; the monolithic MILP baseline, the heterogeneous-cost experiment, and the opening-cost vectors generated for that experiment.</p><p>The 121 benchmark instances are third-party data and are not redistributed here; see the README for their source. Requires Julia 1.12.5 with JuMP and CPLEX.jl, and IBM ILOG CPLEX 22.1.1 (commercial licence).</p>",
+  "keywords": [
+    "student clustering problem",
+    "capacitated clustering",
+    "Benders decomposition",
+    "branch-and-check",
+    "combinatorial Benders cuts",
+    "total unimodularity",
+    "integer programming",
+    "educational logistics"
+  ]
+}
