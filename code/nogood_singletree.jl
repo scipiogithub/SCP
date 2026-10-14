@@ -3,11 +3,6 @@
 # VARIANT A (ABLATION): SINGLE-TREE branch-and-check with COMBINATORIAL (no-good)
 # cuts only.
 #
-# PURPOSE. The paper compares a MULTI-tree combinatorial method (EXACT_NG) with a
-# SINGLE-tree branch-and-Benders-cut method (EXACT_B). Those differ in two things
-# at once: the cut type AND the tree structure. A referee can fairly ask which of
-# the two drives the certification gap (91 vs 69). This file isolates it.
-#
 # DESIGN. The subproblem machinery (Sub, make_sub, eval_sub!) is IDENTICAL to
 # benders_singletree.jl, and the master/coverage/pricing are the same. The ONLY
 # difference from EXACT_B is the cut submitted in the callback:
@@ -18,8 +13,6 @@
 # Therefore:  VARIANT A vs EXACT_B  = pure cut-type effect  (same tree, same code)
 #             VARIANT A vs EXACT_NG = pure tree-structure effect
 #
-# NOTE: cannot be run here (no Julia/CPLEX). Run on your machine, SERIAL, so the
-# timings stay comparable with the other two methods.
 #   Validate:  main(crosscheck=true, instances=1:10)
 #   Report:    main()                       # all 121, prints no_good.txt format
 # -----------------------------------------------------------------------------
@@ -52,7 +45,6 @@ function read_scp_instance(filepath::String)::SCPInstance
 end
 
 # --- Persistent transportation subproblem, DECOMPOSED BY GRADE -----------------
-# IDENTICAL to benders_singletree.jl (kept byte-for-byte so the ablation is clean).
 struct Sub
     models::Vector{Model}
     xs::Vector{Matrix{VariableRef}}
@@ -100,7 +92,7 @@ function eval_dist!(S::Sub, inst::SCPInstance, yhat::Vector{Float64})
     return (dist, true)
 end
 
-# --- Pricing phase: attractiveness weights (same as the other two methods) ------
+# --- Pricing phase: attractiveness weights ------
 function attractiveness(S::Sub, inst::SCPInstance)
     n, p = inst.n, inst.p
     eval_dist!(S, inst, ones(n))            # all schools open
@@ -127,7 +119,7 @@ function nogood_singletree(inst::SCPInstance, tstart::Float64, f::Float64;
     ω = use_weights ? attractiveness(S, inst) : ones(Float64, n)
     t_price = time() - tstart               # cost of make_sub + pricing
 
-    # --- Step 1: certify the minimum cardinality κ -----------------------------
+    # --- Certify the minimum cardinality κ -----------------------------
     # Do NOT use the lexicographic surrogate f*sum(Y) + ω'Y here. With f = 1e6
     # every objective coefficient is ~1e6 while the discriminating ω term is O(1),
     # so a zero-gap proof forces CPLEX to separate solutions that differ by ~1e-8
@@ -156,13 +148,13 @@ function nogood_singletree(inst::SCPInstance, tstart::Float64, f::Float64;
 
     # CORRECTNESS GUARD: if κ was not PROVEN minimal, restricting to sum(Y)==κ
     # would search the wrong stratum and "INFEASIBLE => proven" would be a false
-    # optimality claim. Report the incumbent as unproven instead.
+    # optimality claim.
     if stc != MOI.OPTIMAL
         return (best_ub[], false, ncand[], best_t[],
                 "kappa_not_proven($(stc), price=$(round(t_price, digits=1))s)")
     end
 
-    # --- Step 2: enumerate the minimum-cardinality stratum ----------------------
+    # --- Enumerate the minimum-cardinality stratum ----------------------
     mp = Model(CPLEX.Optimizer)
     set_optimizer_attribute(mp, "CPX_PARAM_THREADS", 1)
     # Lazy constraints invalidate DUAL presolve reductions: keep primal-only, else
@@ -225,7 +217,6 @@ function opt_all(instance::SCPInstance, f::Float64)
 end
 
 # --- Driver -------------------------------------------------------------------
-# Non-crosscheck output matches no_good.txt exactly:  i  obj  ncand  best_t  proven
 function main(; crosscheck::Bool = false, instances = 1:121, use_weights::Bool = true)
     nproven = 0
     for i in instances
@@ -233,10 +224,9 @@ function main(; crosscheck::Bool = false, instances = 1:121, use_weights::Bool =
         f = i == 121 ? 1e4 : 1e6
         t = time()
         obj, proven, ncand, best_t, status = nogood_singletree(inst, t, f; use_weights = use_weights)
-        total_t = time() - t                       # TOTAL wall-clock, comparable with
-                                                   # benders_singletree.jl and the MILP
+        total_t = time() - t                       
         nproven += proven ? 1 : 0
-        objstr = isfinite(obj) ? string(round(Int, obj)) : "Inf"   # never round(Int, Inf)
+        objstr = isfinite(obj) ? string(round(Int, obj)) : "Inf"   
         note = proven ? "" : "   [" * status * "]"
         if crosscheck
             obj2, milp_ok = opt_all(inst, f)
