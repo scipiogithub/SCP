@@ -14,10 +14,10 @@ baseline, and the opening-cost vectors generated for that experiment.
 
 | File | Contents |
 |---|---|
-| `nogood_singletree.jl` | Combinatorial (no-good) method, EXACT_NG; the monolithic MILP baseline (`opt_all`, `main_milp`); instance reader; pricing phase |
-| `benders_singletree.jl` | Branch-and-Benders-cut method, EXACT_B |
-| `benders_general.jl` | Heterogeneous-cost experiment of Section 6.4, and `export_costs` |
-| `heterogeneous_opening_costs.txt` | The opening-cost vectors actually used in Section 6.4 |
+| `code/nogood_singletree.jl` | Combinatorial (no-good) method, EXACT_NG; the monolithic MILP baseline (`opt_all`, `main_milp`); instance reader; pricing phase |
+| `code/benders_singletree.jl` | Branch-and-Benders-cut method, EXACT_B |
+| `code/benders_general.jl` | Heterogeneous-cost experiment of Section 6.4, and `export_costs` |
+| `instances/heterogeneous_opening_costs.txt` | The opening-cost vectors actually used in Section 6.4 |
 
 Each Julia file is self-contained: all three define their own instance reader and
 pricing phase, so any one of them can be `include`d on its own.
@@ -47,12 +47,22 @@ by Sá & Prata (2026) and are available from
 
 > https://github.com/NayzaMamede/students-clustering-problem
 
-Place them so that instance *i* is at `SCP/SCP_inst<i>.txt`, relative to the
-working directory. Instance 121 is the real municipal network of Fortaleza.
+Put them in a folder named `SCP` **beside the Julia files** — that is, in the same
+directory as `nogood_singletree.jl` — so that instance *i* is at
+`SCP/SCP_inst<i>.txt` relative to that directory. If you keep the layout of this
+repository, that means `code/SCP/SCP_inst<i>.txt`.
+
+The reader resolves instance paths with `@__DIR__`, the directory of the Julia
+source file, rather than against the working directory. So what matters is where
+the `.jl` file sits, not where you start Julia: the same call works from the
+repository root or from inside `code/`. The flip side is that if you copy a
+single `.jl` file somewhere on its own, the `SCP` folder has to follow it.
+
+Instance 121 is the real municipal network of Fortaleza.
 
 The **opening-cost vectors** for the heterogeneous-cost experiment of Section 6.4
 are new data produced by this study and are included here as
-`heterogeneous_opening_costs.txt`. Each release of this repository is archived on
+`instances/heterogeneous_opening_costs.txt`. Each release of this repository is archived on
 Zenodo with its own DOI; the paper cites the DOI of the release that produced the
 reported results.
 
@@ -64,22 +74,30 @@ Julia version used *and* on Δ, which is itself obtained by solving the subprobl
 
 ## Reproducing the reported tables
 
-Run from a directory containing `SCP/`.
+With the benchmark instances in place, `include` the file you need and call the
+listed function. From the repository root:
+
+```julia
+include("code/nogood_singletree.jl")
+main()
+```
 
 | Table | File | Command |
 |---|---|---|
-| 2 — Version 1 vs Version 2 | `nogood_singletree.jl` | `main()` for Version 1; `main(use_weights = false)` for Version 2 |
-| 3, S2 — EXACT_NG column | `nogood_singletree.jl` | `main()` |
-| 3, S2 — EXACT_B column | `benders_singletree.jl` | `main(instances = 1:121)` |
-| 3, S2 — MILP column | `nogood_singletree.jl` | `main_milp()` |
+| 2 — Version 1 vs Version 2 | `code/nogood_singletree.jl` | `main()` for Version 1; `main(use_weights = false)` for Version 2 |
+| 3, S2 — EXACT_NG column | `code/nogood_singletree.jl` | `main()` |
+| 3, S2 — EXACT_B column | `code/benders_singletree.jl` | `main(instances = 1:121)` |
+| 3, S2 — MILP column | `code/nogood_singletree.jl` | `main_milp()` |
 | 4, 5, S3 | — | derived from the objective values of the three runs above and the published metaheuristic results |
-| 6, 7, S4 | `benders_general.jl` | `main_general(cost_scale = 1.0)`, then `2.0`, then `5.0` |
-| Cost-vector file | `benders_general.jl` | `export_costs()` |
+| 6, 7, S4 | `code/benders_general.jl` | `main_general(cost_scale = 1.0)`, then `2.0`, then `5.0` |
+| Cost-vector file | `code/benders_general.jl` | `export_costs()` |
 
 Notes on the commands:
 
 * `benders_singletree.jl`'s `main` defaults to a reduced instance list (`OPEN`);
   pass `instances = 1:121` for the full reported run.
+* `export_costs` writes its output file to the **working directory**, not to the
+  code directory; the copy committed here sits in `instances/`.
 * `export_costs` deliberately lives inside `benders_general.jl` rather than in a
   script of its own, so that it consumes the random stream in exactly the same
   order as `main_general`. Moving it would silently change the exported values.
